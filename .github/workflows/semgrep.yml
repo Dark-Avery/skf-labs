@@ -9,18 +9,34 @@ on:
 
 jobs:
   semgrep:
-    name: Run Semgrep without App Token
+    name: Run Semgrep
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Semgrep
+
+      - name: Установка Semgrep и jq
         run: |
           python3 -m pip install --upgrade pip
-          pip install semgrep
-      - name: Run Semgrep Scan
+          pip install semgrep jq
+
+      - name: Запуск Semgrep и сохранение результатов
         run: |
           semgrep scan --config auto --sarif -o semgrep.sarif .
-      - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v2
+
+      - name: Подсчёт количества найденных проблем
+        id: count_issues
+        run: |
+          ISSUE_COUNT=$(jq '.runs[0].results | length' semgrep.sarif)
+          echo "Найдено проблем: $ISSUE_COUNT"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Прерывание workflow при превышении порога
+        if: steps.count_issues.outputs.issue_count > 50
+        run: |
+          echo "Количество найденных проблем (${{ steps.count_issues.outputs.issue_count }}) превышает допустимый порог (50)."
+          exit 1
+
+      - name: Загрузка отчёта SARIF
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
