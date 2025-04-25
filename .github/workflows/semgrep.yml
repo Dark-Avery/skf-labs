@@ -21,7 +21,9 @@ jobs:
 
       - name: Запуск Semgrep и сохранение результатов
         run: |
-          semgrep scan --config auto --sarif -o semgrep.sarif .
+          semgrep scan --config .semgrep/rules --sarif -o semgrep.sarif .
+          # semgrep scan --config auto --sarif -o semgrep.sarif .
+          
 
       - name: Подсчёт количества найденных проблем
         id: count_issues
