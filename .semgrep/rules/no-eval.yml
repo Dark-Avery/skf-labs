@@ -1,0 +1,7 @@
+rules:
+  - id: no-eval
+    patterns:
+      - pattern: eval(...)
+    message: Использование eval может быть опасным. Рассмотрите альтернативные подходы.
+    languages: [python]
+    severity: WARNING
