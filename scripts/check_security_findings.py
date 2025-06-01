@@ -10,7 +10,6 @@ def load_json(path):
         return json.load(f)
 
 def count_sarif_findings(sarif_json):
-    # Все находки — просто длина runs[0].results
     return len(sarif_json.get('runs', [{}])[0].get('results', []))
 
 if __name__ == '__main__':
