@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: gitleaks-results.sarif
+          path: results.sarif
 
   quality-gate:
     if: github.event_name == 'pull_request'
@@ -90,4 +90,4 @@ jobs:
         continue-on-error: true
 
       - name: Run Quality Gate script
-        run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.json gitleaks-results.sarif
+        run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.json results.sarif
