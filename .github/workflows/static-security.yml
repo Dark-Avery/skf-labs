@@ -46,21 +46,25 @@ jobs:
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source=. --report-format=json --report-path=gitleaks-report.json || true
+          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
+        continue-on-error: true
 
       - name: Upload Semgrep report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: semgrep-report
           path: semgrep-report.json
 
       - name: Upload pip-audit report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pip-audit-report
           path: pip-audit-report.json
 
       - name: Upload Gitleaks report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
@@ -86,7 +90,8 @@ jobs:
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source=. --report-format=json --report-path=gitleaks-report.json || true
+          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
+        continue-on-error: true
 
       - name: Run Quality Gate script
         run: python3 scripts/check_security_findings.py semgrep-report.json pip-audit-report.json gitleaks-report.json
