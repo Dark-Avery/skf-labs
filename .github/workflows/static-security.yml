@@ -1,0 +1,108 @@
+name: Static Security Pipeline
+
+on:
+  push:
+    branches:
+      - feature
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+
+  sast-sca-secrets:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    name: SAST, SCA, Secrets Scan (feature branches)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Python dependencies for scanners
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install semgrep jq pip-audit
+
+      - name: Run Semgrep
+        run: semgrep --config .semgrep/rules --json --output=semgrep-report.json
+
+      - name: Run pip-audit
+        run: |
+          echo '{"results": [' > pip-audit-report.json
+          first=1
+          find . -name requirements.txt | while read file; do
+            echo "Auditing $file"
+            pip-audit -r "$file" --format=json > tmp.json || true
+            # Вырезаем внешние [] и добавляем в общий массив
+            items=$(jq '.[]' tmp.json)
+            if [[ "$items" != "" ]]; then
+              if [[ $first -eq 0 ]]; then echo ',' >> pip-audit-report.json; fi
+              echo "$items" >> pip-audit-report.json
+              first=0
+            fi
+          done
+          echo ']}' >> pip-audit-report.json
+
+      - name: Run Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          chmod +x gitleaks
+          ./gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json
+
+      - name: Upload Semgrep report
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep-report
+          path: semgrep-report.json
+
+      - name: Upload pip-audit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+
+      - name: Upload Gitleaks report
+        uses: actions/upload-artifact@v3
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+
+  quality-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: Quality Gate on PR to develop
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Python dependencies for scanners
+        run: pip install semgrep pip-audit
+
+      - name: Run Semgrep
+        run: semgrep --config semgrep-custom-rules.yml --json --output=semgrep-report.json
+
+      - name: Run pip-audit
+        run: |
+          echo '{"results": [' > pip-audit-report.json
+          first=1
+          find . -name requirements.txt | while read file; do
+            echo "Auditing $file"
+            pip-audit -r "$file" --format=json > tmp.json || true
+            # Вырезаем внешние [] и добавляем в общий массив
+            items=$(jq '.[]' tmp.json)
+            if [[ "$items" != "" ]]; then
+              if [[ $first -eq 0 ]]; then echo ',' >> pip-audit-report.json; fi
+              echo "$items" >> pip-audit-report.json
+              first=0
+            fi
+          done
+          echo ']}' >> pip-audit-report.json
+
+      - name: Run Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
+          chmod +x gitleaks
+          ./gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json
+
+      - name: Run Quality Gate script
+        run: python3 scripts/check_security_findings.py semgrep-report.json pip-audit-report.json gitleaks-report.json
