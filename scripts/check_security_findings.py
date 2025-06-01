@@ -2,7 +2,6 @@
 import json
 import sys
 
-# Порог критичных находок
 THRESHOLD = 50
 
 def load_json(path):
@@ -13,12 +12,10 @@ def count_sarif_findings(sarif_json):
     return len(sarif_json.get('runs', [{}])[0].get('results', []))
 
 def count_pip_audit_vulns(audit_json):
-    if "vulnerabilities" in audit_json:
-        return len(audit_json["vulnerabilities"])
-    elif "results" in audit_json:
-        return len(audit_json["results"])
-    else:
-        return 0
+    count = 0
+    for dep in audit_json.get("dependencies", []):
+        count += len(dep.get("vulns", []))
+    return count
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
