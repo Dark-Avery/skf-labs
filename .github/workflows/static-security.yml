@@ -23,10 +23,10 @@ jobs:
           pip install semgrep jq pip-audit
 
       - name: Run Semgrep
-        run: semgrep --config .semgrep/rules --json --output=semgrep-report.json || true
+        run: semgrep --config semgrep-custom-rules.yml --sarif --output=semgrep-report.sarif
 
       - name: Run pip-audit
-        run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output=pip-audit-report.json || true
+        run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
         # run: |
         #   echo '{"results": [' > pip-audit-report.json
         #   first=1
@@ -45,8 +45,6 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
         continue-on-error: true
 
       - name: Upload Semgrep report
@@ -82,16 +80,14 @@ jobs:
         run: pip install semgrep pip-audit
 
       - name: Run Semgrep
-        run: semgrep --config semgrep-custom-rules.yml --json --output=semgrep-report.json 
+        run: semgrep --config semgrep-custom-rules.yml --sarif --output=semgrep-report.sarif
 
       - name: Run pip-audit
-        run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output=pip-audit-report.json || true
+        run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
         continue-on-error: true
 
       - name: Run Quality Gate script
-        run: python3 scripts/check_security_findings.py semgrep-report.json pip-audit-report.json gitleaks-report.json
+        run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.sarif gitleaks-results.sarif
