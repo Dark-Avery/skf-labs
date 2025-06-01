@@ -49,19 +49,19 @@ jobs:
           ./gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json
 
       - name: Upload Semgrep report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: semgrep-report
           path: semgrep-report.json
 
       - name: Upload pip-audit report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pip-audit-report
           path: pip-audit-report.json
 
       - name: Upload Gitleaks report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
           path: gitleaks-report.json
