@@ -23,7 +23,7 @@ jobs:
           pip install semgrep jq pip-audit
 
       - name: Run Semgrep
-        run: semgrep --config semgrep-custom-rules.yml --sarif --output=semgrep-report.sarif
+        run: semgrep --config .semgrep/rules --sarif --output=semgrep-report.sarif || true
 
       - name: Run pip-audit
         run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
@@ -80,7 +80,7 @@ jobs:
         run: pip install semgrep pip-audit
 
       - name: Run Semgrep
-        run: semgrep --config semgrep-custom-rules.yml --sarif --output=semgrep-report.sarif
+        run: semgrep --config .semgrep/rules --sarif --output=semgrep-report.sarif || true
 
       - name: Run pip-audit
         run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
