@@ -26,27 +26,27 @@ jobs:
         run: semgrep --config .semgrep/rules --json --output=semgrep-report.json
 
       - name: Run pip-audit
-        run: |
-          echo '{"results": [' > pip-audit-report.json
-          first=1
-          find . -name requirements.txt | while read file; do
-            echo "Auditing $file"
-            pip-audit -r "$file" --format=json > tmp.json || true
-            # Вырезаем внешние [] и добавляем в общий массив
-            items=$(jq '.[]' tmp.json)
-            if [[ "$items" != "" ]]; then
-              if [[ $first -eq 0 ]]; then echo ',' >> pip-audit-report.json; fi
-              echo "$items" >> pip-audit-report.json
-              first=0
-            fi
-          done
-          echo ']}' >> pip-audit-report.json
+        run: pip-audit -r "python/xss-basic/requirements.txt" --format=json --output=pip-audit-report.json
+        # run: |
+        #   echo '{"results": [' > pip-audit-report.json
+        #   first=1
+        #   find . -name requirements.txt | while read file; do
+        #     echo "Auditing $file"
+        #     pip-audit -r "$file" --format=json > tmp.json || true
+        #     # Вырезаем внешние [] и добавляем в общий массив
+        #     items=$(jq '.[]' tmp.json)
+        #     if [[ "$items" != "" ]]; then
+        #       if [[ $first -eq 0 ]]; then echo ',' >> pip-audit-report.json; fi
+        #       echo "$items" >> pip-audit-report.json
+        #       first=0
+        #     fi
+        #   done
+        #   echo ']}' >> pip-audit-report.json
 
       - name: Run Gitleaks
-        run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
-          chmod +x gitleaks
-          ./gitleaks detect --source=. --report-format=json --report-path=gitleaks-report.json
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source=. --report-format=json --report-path=gitleaks-report.json
 
       - name: Upload Semgrep report
         uses: actions/upload-artifact@v4
