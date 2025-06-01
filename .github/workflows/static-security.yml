@@ -2,11 +2,10 @@ name: Static Security Pipeline
 
 on:
   push:
-    branches:
-      - feature
+    branches: [feature]
   pull_request:
-    branches:
-      - develop
+    branches: [develop]
+  workflow_dispatch:
 
 jobs:
 
