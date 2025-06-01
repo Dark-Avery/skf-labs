@@ -12,9 +12,17 @@ def load_json(path):
 def count_sarif_findings(sarif_json):
     return len(sarif_json.get('runs', [{}])[0].get('results', []))
 
+def count_pip_audit_vulns(audit_json):
+    if "vulnerabilities" in audit_json:
+        return len(audit_json["vulnerabilities"])
+    elif "results" in audit_json:
+        return len(audit_json["results"])
+    else:
+        return 0
+
 if __name__ == '__main__':
     if len(sys.argv) != 4:
-        print("Usage: check_security_findings.py semgrep.sarif pip-audit.sarif gitleaks.sarif")
+        print("Usage: check_security_findings.py semgrep.sarif pip-audit.json gitleaks.sarif")
         sys.exit(1)
 
     semgrep_file, pip_file, gitleaks_file = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -23,7 +31,7 @@ if __name__ == '__main__':
     gitleaks_data = load_json(gitleaks_file)
 
     semgrep_findings = count_sarif_findings(semgrep_data)
-    pip_vulns = count_sarif_findings(pip_data)
+    pip_vulns = count_pip_audit_vulns(pip_data)
     gitleaks_leaks = count_sarif_findings(gitleaks_data)
 
     total = semgrep_findings + pip_vulns + gitleaks_leaks

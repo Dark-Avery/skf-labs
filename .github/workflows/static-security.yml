@@ -26,7 +26,7 @@ jobs:
         run: semgrep --config .semgrep/rules --sarif --output=semgrep-report.sarif || true
 
       - name: Run pip-audit
-        run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
+        run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output pip-audit-report.json || true
         # run: |
         #   echo '{"results": [' > pip-audit-report.json
         #   first=1
@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: semgrep-report
-          path: semgrep-report.json
+          path: semgrep-report.sarif
 
       - name: Upload pip-audit report
         if: always()
@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: gitleaks-report.json
+          path: results.sarif
 
   quality-gate:
     if: github.event_name == 'pull_request'
@@ -83,11 +83,11 @@ jobs:
         run: semgrep --config .semgrep/rules --sarif --output=semgrep-report.sarif || true
 
       - name: Run pip-audit
-        run: pip-audit -r "python/HTML-injection/requirements.txt" --format sarif --output=pip-audit-report.sarif || true
+        run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output pip-audit-report.json || true
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         continue-on-error: true
 
       - name: Run Quality Gate script
-        run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.sarif gitleaks-results.sarif
+        run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.json results.sarif
