@@ -27,7 +27,6 @@ jobs:
         with:
           target: 'http://localhost:5000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-i'
 
       - name: Stop HTML-injection lab container
         if: always()
