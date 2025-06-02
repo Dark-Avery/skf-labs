@@ -27,13 +27,6 @@ jobs:
         with:
           target: 'http://localhost:5000'
 
-      - name: Upload ZAP report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: owasp-zap-report.html
-
       - name: Stop HTML-injection lab container
         if: always()
         run: |
