@@ -29,25 +29,20 @@ jobs:
 
       - name: Run pip-audit
         run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output pip-audit-report.json || true
-        # run: |
-        #   echo '{"results": [' > pip-audit-report.json
-        #   first=1
-        #   find . -name requirements.txt | while read file; do
-        #     echo "Auditing $file"
-        #     pip-audit -r "$file" --format=json > tmp.json || true
-        #     # Вырезаем внешние [] и добавляем в общий массив
-        #     items=$(jq '.[]' tmp.json)
-        #     if [[ "$items" != "" ]]; then
-        #       if [[ $first -eq 0 ]]; then echo ',' >> pip-audit-report.json; fi
-        #       echo "$items" >> pip-audit-report.json
-        #       first=0
-        #     fi
-        #   done
-        #   echo ']}' >> pip-audit-report.json
 
+      - name: Download Gitleaks
+        run: |
+          wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.27.0/gitleaks_8.27.0_linux_x64.tar.gz
+          tar -xzf gitleaks.tar.gz
+          chmod +x gitleaks
+      
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        continue-on-error: true
+        run: |
+          ./gitleaks detect --no-git --source=. --report-format=sarif --report-path=results.sarif || true
+
+      # - name: Run Gitleaks
+      #   uses: gitleaks/gitleaks-action@v2
+      #   continue-on-error: true
 
       - name: Upload Semgrep report
         if: always()
@@ -89,11 +84,21 @@ jobs:
       - name: Run pip-audit
         run: pip-audit -r "python/HTML-injection/requirements.txt" --format=json --output pip-audit-report.json || true
 
+      - name: Download Gitleaks
+        run: |
+          wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.27.0/gitleaks_8.27.0_linux_x64.tar.gz
+          tar -xzf gitleaks.tar.gz
+          chmod +x gitleaks
+      
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+        run: |
+          ./gitleaks detect --no-git --source=. --report-format=sarif --report-path=results.sarif || true
+
+      # - name: Run Gitleaks
+      #   uses: gitleaks/gitleaks-action@v2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   continue-on-error: true
 
       - name: Run Quality Gate script
         run: python3 scripts/check_security_findings.py semgrep-report.sarif pip-audit-report.json results.sarif
