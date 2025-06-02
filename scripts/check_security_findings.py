@@ -2,7 +2,7 @@
 import json
 import sys
 
-THRESHOLD = 50
+THRESHOLD = 75
 
 def load_json(path):
     with open(path, 'r', encoding='utf-8') as f:
